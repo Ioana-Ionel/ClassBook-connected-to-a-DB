@@ -27,6 +27,7 @@ class View:
 
             # add the if statemens
             if option == 0:
+                self.controller.closingDB()
                 break
             if option == 1:
                 # we call a function to ask for data about the student and is has to be called only once

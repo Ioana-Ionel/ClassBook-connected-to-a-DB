@@ -32,3 +32,6 @@ class Controller:
 
     def checkRegistrationNr(self, registrationNr):
         return self.repository.checkRegistrationNr(registrationNr)
+
+    def closingDB(self):
+        self.repository.closingDB()

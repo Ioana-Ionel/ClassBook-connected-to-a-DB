@@ -1,22 +1,20 @@
 from __future__ import print_function
 from domain import Student
 import MySQLdb
+from MySQL import DB
 
 
 class Repository:
-    def __init__(self):
+    def __init__(self, db):
         self.studentList = []
+        self.db = db
         self.loadAllStudents()
 
     # is the first thing that happens when the programme opens
     def loadAllStudents(self):
         try:
-            # connect to the db ClassBook
-            db = MySQLdb.connect(host='127.0.0.1', user='root', passwd='ioana', db='ClassBook')
-            # create a cursor
-            cur = db.cursor()
-            cur.execute('Select * from Students')
-            table = cur.fetchall()
+            cursor = self.db.query('Select * from Students')
+            table = cursor.fetchall()
             # iterate through every data in the table students
             for row in table:
                 student = Student()
@@ -26,10 +24,12 @@ class Repository:
                 student.className = row[4]
                 self.studentList.append(student)
             # we also have to add the grades in the list
-            cur.execute('Select students.registrationNr, subjects.subjectName, grades.grade from grades '
-                         'join students on grades.student_id = students.id'
-                         'join subjects on grades.subject_id= subjects.id;')
-            table=cur.fetchall()
+            cursor=self.db.query('select students.registrationNr, subjects.subjectName, grades.grade '
+                                   'from grades '
+                                   'join students on grades.student_id = students.id '
+                                   'join subjects on grades.subject_id= subjects.id;')
+
+            table=cursor.fetchall()
             for row in table:
                 # value[0]= registration nr, value[1]= subject name , value[2]=grade
                 for student in self.studentList:
@@ -37,48 +37,35 @@ class Repository:
                     if row[0] == student.registrationNr:
                         student.addGrades(row[1], row[2])
             # we close the environment
-            cur.close()
+            cursor.close()
             # we close the bd
-            db.close()
         except MySQLdb.Error as err:
             print ('Something went wrong:{}'.format(err))
 
     # adds student info to the DB
     def addInfoToDB(self, student):
-        # connect to the db ClassBook
-        db = MySQLdb.connect(host='127.0.0.1', user='root', passwd='ioana', db='ClassBook')
-        # create a cursor
-        cur = db.cursor()
-        # we have to write in the Students DB
         try:
-            cur.execute('Insert into Students values (NULL,%s,%s,%s,%s)',
-                    (student.lastName,student.firstName,student.registrationNr,student.className))
-            db.commit()
+            sql = 'Insert into Students values(NULL,%s,%s,%s,%s);',(student.lastName,student.firstName,student.registrationNr,student.className)
+            self.db.query(sql)
+            self.db.commit()
+            return True
         except MySQLdb.IntegrityError as err:
             print("Error: {}".format(err))
             return False
-        cur.close()
-        db.close()
-        return True
 
     # adds the grades to the DB
     def addGradeToDB(self, student, subject, grade):
-        db = MySQLdb.connect(host='127.0.0.1', user='root', passwd='ioana', db='ClassBook')
-        # create a cursor
-        cur = db.cursor()
         # we have to see what is the subjest id and the student id and after add it to the list
         # find the student id
-        cur.execute('Select id from Students where lastName= %s and firstName= %s',
+        cursor=self.db.query('Select id from Students where lastName= %s and firstName= %s',
                     (student.lastName, student.firstName))
-        studentId = cur.fetchone()
+        studentId = cursor.fetchone()
         # find the subject id
-        cur.execute('Select id from Subjects where subjectName= %s', (subject,))
-        subjectId = cur.fetchone()
-        cur.execute('Insert into Grades values (NULL,%s,%s,%s)',
+        cursor=self.db.query('Select id from Subjects where subjectName= %s', (subject,))
+        subjectId = cursor.fetchone()
+        self.db.query('Insert into Grades values (NULL,%s,%s,%s)',
                     (studentId[0], subjectId[0], grade))
-        db.commit()
-        cur.close()
-        db.close()
+        self.db.commit()
 
     def findInList(self, student):
         if len(self.studentList) == 0:
@@ -120,6 +107,8 @@ class Repository:
         else:
             return False
 
+    def closingDB(self):
+        self.db.close()
 
 
 
