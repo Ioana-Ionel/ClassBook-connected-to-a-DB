@@ -14,7 +14,7 @@ class View:
             print ("3.To show the students press 3")
             print ("4.To show the grades press 4")
 
-            # add exception handling in case the user or the programmer doesn't comply
+            # add exception handling in case the user doesn't comply
             while True:
                 try:
                     option = int(raw_input('Enter option: '))
@@ -24,42 +24,36 @@ class View:
                         print("The option you chose is not valid")
                 except ValueError:
                     print("The option you chose is not valid")
-
-            # add the if statemens
             if option == 0:
                 self.controller.closingDB()
                 break
             if option == 1:
                 # we call a function to ask for data about the student and is has to be called only once
-                student = self.studentInfo()
-                if student is not False and self.controller.createStudent(student) is False:
-                    print('The student is already in the database or registration number already exists.')
+                studentInfo = self.studentInfo()
+                if studentInfo is not False and self.controller.createStudent(studentInfo) is False:
+                    print('The student is already in the database')
 
             if option == 2:
-                # we call functions in order to add the grade for a subject to a specific student
+                # we call functions in order to add the mark for a subject to a specific student
                 # the results will then be send to controller and after to repository
-                lastName = self.createString('last name')
-                firstName = self.createString('first name')
-                subject = self.createSubject()
-                grade = self.createGrade()
-                # we have to add grades to the students that are already in the database
-                if self.controller.addGrade(lastName, firstName, subject, grade) == False:
-                    print ('The student has not yet been added to the database.')
-
+                lastName = self.addString('last name')
+                firstName = self.addString('first name')
+                subject = self.addSubject()
+                mark = self.addMark()
+                if self.controller.addGrade(lastName, firstName, subject, mark) == False:
+                    print ('The student has not yet been added to the database')
             if option == 3:
                 listaElevi = self.controller.returnStudent()
                 for elev in listaElevi:
                     print(elev.getStudent())
-
             if option == 4 :
                 listaElevi = self.controller.returnStudent()
                 for elev in listaElevi:
-                    print(elev.getSudentGrades())
-
+                    print(elev)
     def studentInfo(self):
-        lastName = self.createString('last name').title()
-        firstName = self.createString('first name').title()
-        registrationNr = self.createRegistrationNr()
+        lastName = self.addString('last name').title()
+        firstName = self.addString('first name').title()
+        registrationNr = self.addRegitrationNr()
         # when we add the registration number we fave to make sure that there is no other student with that number
         # we could just as well generate a random registration number
         # but we still have to check if there are duplicates
@@ -68,10 +62,10 @@ class View:
             # we end the adding to the list now
             return False
         else:
-            className = self.createClassName()
-            return '{},{},{},{}'.format(lastName,firstName, registrationNr, className)
+            grade = self.addGrade()
+            return '{},{},{},{}'.format(lastName,firstName, registrationNr, grade)
 
-    def createString(self, string):
+    def addString(self, string):
         while True:
             person = raw_input('Add {}: '.format(string))
             if all(char.isalpha() or char == ' ' for char in person):
@@ -80,7 +74,7 @@ class View:
                 print("{} can contain only letters.".format(string))
         return person
 
-    def createRegistrationNr(self):
+    def addRegitrationNr(self):
         while True:
             try:
                 registrationNr = raw_input("Add registration number: ")
@@ -92,23 +86,23 @@ class View:
                 print("The registration number has only 5 numbers.")
         return int(registrationNr)
 
-    def createClassName(self):
+    def addGrade(self):
         while True:
             try:
-                className = int(raw_input("Add class: "))
-                if className in range(0, 13):
+                grade = int(raw_input("Add grade: "))
+                if grade in range(0, 13):
                     break
                 else:
-                    print ("The class can be between 1 and 12.")
+                    print ("The grade can be between 1 and 12.")
             except ValueError:
-                print ("The class can be between 1 and 12.")
-        return className
+                print ("The grade can be between 1 and 12.")
+        return grade
 
-    def createSubject(self):
+    def addSubject(self):
         while True:
             curriculum = ('mathematics', 'chemistry', 'physics','informatics','english')
             subject = raw_input('Add subject: ')
-            # transforms the string in lowercase and removes the spaces
+            #transforms the string in lowercase and removes the spaces
             subject = subject.lower().strip()
             found = False
             for s in curriculum:
@@ -120,13 +114,13 @@ class View:
                 print('The subject is not found in the curriculum')
         return subject
 
-    def createGrade(self):
+    def addMark(self):
         while True:
-            grade = int (raw_input('Add grade: '))
-            if grade in range(1,11):
+            mark = int (raw_input('Add mark: '))
+            if mark in range(1,11):
                 break
             else:
-                print('The grade should be in the interval 1 - 10.')
-        return grade
+                print('The mark should be in the interval 1 - 10.')
+        return mark
 
 
