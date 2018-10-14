@@ -15,20 +15,22 @@ class Student:
         #we want to show the result as a string
         for s in self.subjects:
             strSubjects += str(s) + " "
-        return "{} {} with the registration number {} is in grade {} and has the marks: {}".format(self.lastName, self.firstName, self.registrationNr, self.className, strSubjects)
+        return "{} {} with the registration number {} is in class {} and has the grades: {}".format(self.lastName, self.firstName, self.registrationNr, self.className, strSubjects)
 
     def getStudent(self):
-        return "{} {} with the registration number {} is in grade {}".format(self.lastName, self.firstName, self.registrationNr, self.className)
+        return "{} {} with the registration number {} is in class {}".format(self.lastName, self.firstName, self.registrationNr, self.className)
 
-    # def getMarksForFileFormat(self):
-    #     strMarks = ''
-    #     for m in self.subjects:
-    #         strMarks = strMarks + m.getGrades()
-    #     return strMarks
-
-    def addGrade(self, subjectName, grade):
+    def getSudentGrades(self):
+        strSubjects = " "
+        # we want to show the result as a string
         for s in self.subjects:
-            # for the existing subjects we eill add marks in their owl lists
+            strSubjects += str(s) + " "
+        return "{} {} has the following grades: {}".format(self.lastName, self.firstName, strSubjects)
+
+    # this function adds a grade to the subject list
+    def addGrades(self, subjectName, grade):
+        for s in self.subjects:
+            # for the existing subjects we will add grades in their own lists
             if s.getSubjectName() == subjectName:
                 s.addGrade(grade)
                 # it will return the result and not go further

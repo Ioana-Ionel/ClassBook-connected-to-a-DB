@@ -1,6 +1,5 @@
 from __future__ import print_function
 from domain import Student
-from domain import Subject
 import MySQLdb
 from MySQL import DB
 
@@ -8,7 +7,6 @@ from MySQL import DB
 class Repository:
     def __init__(self, db):
         self.studentList = []
-<<<<<<< HEAD
         self.db = db
         self.loadAllStudents()
 
@@ -68,37 +66,6 @@ class Repository:
         self.db.query('Insert into Grades values (NULL,%s,%s,%s)',
                     (studentId[0], subjectId[0], grade))
         self.db.commit()
-=======
-        self.readFromDB()
-
-    def readFromDB(self):
-        # connect to the db ClassBook
-        db = MySQLdb.connect(host='127.0.0.1', user='root', passwd='ioana', db='ClassBook')
-        # create a cursor
-        cur = db.cursor()
-        # select every last name from the db
-        cur.execute('Select * from Students')
-        database = cur.fetchall()
-        # iterate through every data in database
-        for value in database:
-            student = Student()
-            student.lastName = value[1]
-            student.firstName = value[2]
-            student.registrationNr = value[3]
-            student.className = value[4]
-            self.studentList.append(student)
-        cur.close()
-
-    def writeToDB(self, student):
-        # connect to the db ClassBook
-        db = MySQLdb.connect(host='127.0.0.1', user='root', passwd='ioana', db='ClassBook')
-        # create a cursor
-        cur = db.cursor()
-        # we have to write in the Students DB
-        cur.execute(('Insert into Students values (NULL,%s,%s,%s,%s)'),
-                    (student.lastName,student.firstName,student.registrationNr,student.grade))
-        db.commit()
->>>>>>> parent of 428ee2e... Second commit before class DB
 
     def findInList(self, student):
         if len(self.studentList) == 0:
@@ -114,11 +81,13 @@ class Repository:
             return False
         else:
             self.studentList.append(student)
-            self.writeToDB()
+            self.addInfoToDB(student)
             return True
 
     def returnStudentList(self):
         # we sort by last name and first name
+        self.studentList=[]
+        self.loadAllStudents()
         self.studentList = sorted(self.studentList, key=lambda x: (x.lastName, x.firstName))
         return self.studentList
 
@@ -128,6 +97,15 @@ class Repository:
             if registrationNr == student.registrationNr:
                 return False
 
+    def addGradeToList(self, student, subject, grade):
+        student = self.findInList(student)
+        if student is not False:
+            student.addGrades(subject, grade)
+            # add to the db as well
+            self.addGradeToDB(student, subject, grade)
+            return True
+        else:
+            return False
 
     def closingDB(self):
         self.db.close()
