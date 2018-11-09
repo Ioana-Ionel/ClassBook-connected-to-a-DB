@@ -29,11 +29,12 @@ class View:
             if option == 0:
                 self.controller.closingDB()
                 break
+
             if option == 1:
                 # we call a function to ask for data about the student and is has to be called only once
                 student = self.studentInfo()
-                if student is not False and self.controller.createStudent(student) is False:
-                    print('The student is already in the database or registration number already exists.')
+                if self.controller.createStudent(student) is False:
+                    print('The student is already in the database or the registration number already exists.')
 
             if option == 2:
                 # we call functions in order to add the grade for a subject to a specific student
@@ -60,16 +61,8 @@ class View:
         lastName = self.createString('last name').title()
         firstName = self.createString('first name').title()
         registrationNr = self.createRegistrationNr()
-        # when we add the registration number we fave to make sure that there is no other student with that number
-        # we could just as well generate a random registration number
-        # but we still have to check if there are duplicates
-        if self.controller.checkRegistrationNr(registrationNr) is False :
-            print ('There is another student in the database with the same registration number')
-            # we end the adding to the list now
-            return False
-        else:
-            className = self.createClassName()
-            return '{},{},{},{}'.format(lastName,firstName, registrationNr, className)
+        className = self.createClassName()
+        return '{},{},{},{}'.format(lastName,firstName, registrationNr, className)
 
     def createString(self, string):
         while True:

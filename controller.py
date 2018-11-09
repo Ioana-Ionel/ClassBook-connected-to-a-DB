@@ -30,8 +30,5 @@ class Controller:
     def returnStudent(self):
         return self.repository.returnStudentList()
 
-    def checkRegistrationNr(self, registrationNr):
-        return self.repository.checkRegistrationNr(registrationNr)
-
     def closingDB(self):
         self.repository.closingDB()

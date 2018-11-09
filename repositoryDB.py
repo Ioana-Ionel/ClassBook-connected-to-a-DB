@@ -8,12 +8,14 @@ class Repository:
     def __init__(self, db):
         self.studentList = []
         self.db = db
-        self.loadAllStudents()
+        #self.loadAllStudents()
 
     # is the first thing that happens when the programme opens
     def loadAllStudents(self):
         try:
-            cursor = self.db.query('Select * from Students')
+            self.db.connect()
+            cursor = self.db.cursor()
+            cursor.execute('Select * from Students')
             table = cursor.fetchall()
             # iterate through every data in the table students
             for row in table:
@@ -24,7 +26,7 @@ class Repository:
                 student.className = row[4]
                 self.studentList.append(student)
             # we also have to add the grades in the list
-            cursor=self.db.query('select students.registrationNr, subjects.subjectName, grades.grade '
+            cursor.execute('select students.registrationNr, subjects.subjectName, grades.grade '
                                    'from grades '
                                    'join students on grades.student_id = students.id '
                                    'join subjects on grades.subject_id= subjects.id;')
@@ -37,35 +39,42 @@ class Repository:
                     if row[0] == student.registrationNr:
                         student.addGrades(row[1], row[2])
             # we close the environment
-            cursor.close()
-            # we close the bd
+
         except MySQLdb.Error as err:
             print ('Something went wrong:{}'.format(err))
 
     # adds student info to the DB
     def addInfoToDB(self, student):
         try:
-            sql = 'Insert into Students values(NULL,%s,%s,%s,%s);',(student.lastName,student.firstName,student.registrationNr,student.className)
-            self.db.query(sql)
+            self.db.connect()
+            cursor=self.db.cursor()
+            cursor.execute('Insert into Students values(NULL,%s,%s,%s,%s);',
+                           (student.lastName,student.firstName,student.registrationNr,student.className))
             self.db.commit()
+            cursor.close()
             return True
         except MySQLdb.IntegrityError as err:
-            print("Error: {}".format(err))
+            # this means the registration number has been added to the list
+            # the registration number is marked as unique in the db
+            print(err)
             return False
 
     # adds the grades to the DB
     def addGradeToDB(self, student, subject, grade):
+        self.db.connect()
         # we have to see what is the subjest id and the student id and after add it to the list
         # find the student id
-        cursor=self.db.query('Select id from Students where lastName= %s and firstName= %s',
+        cursor=self.db.cursor()
+        cursor.execute('Select id from Students where lastName= %s and firstName= %s',
                     (student.lastName, student.firstName))
         studentId = cursor.fetchone()
         # find the subject id
-        cursor=self.db.query('Select id from Subjects where subjectName= %s', (subject,))
+        cursor.execute('Select id from Subjects where subjectName= %s', (subject,))
         subjectId = cursor.fetchone()
-        self.db.query('Insert into Grades values (NULL,%s,%s,%s)',
+        cursor.execute('Insert into Grades values (NULL,%s,%s,%s)',
                     (studentId[0], subjectId[0], grade))
         self.db.commit()
+        cursor.close()
 
     def findInList(self, student):
         if len(self.studentList) == 0:
@@ -81,7 +90,9 @@ class Repository:
             return False
         else:
             self.studentList.append(student)
-            self.addInfoToDB(student)
+            # if addInfotoDB returns false the registration nr was already in  the db
+            if self.addInfoToDB(student) is False:
+                return False
             return True
 
     def returnStudentList(self):
@@ -90,12 +101,6 @@ class Repository:
         self.loadAllStudents()
         self.studentList = sorted(self.studentList, key=lambda x: (x.lastName, x.firstName))
         return self.studentList
-
-    # this is not that necessary as the registration nr is marked as unique in the DB
-    def checkRegistrationNr(self, registrationNr):
-        for student in self.studentList:
-            if registrationNr == student.registrationNr:
-                return False
 
     def addGradeToList(self, student, subject, grade):
         student = self.findInList(student)
